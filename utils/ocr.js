@@ -1,5 +1,4 @@
 const Tesseract = require('tesseract.js');
-const sharp = require('sharp');
 
 function getPlacementMultiplier(placement) {
   if (placement === 1) return 1.6;
@@ -15,30 +14,20 @@ function calculatePoints(kills, placement) {
   return Math.round(points * 10) / 10;
 }
 
-async function preprocessImage(imageBuffer) {
-  try {
-    const processed = await sharp(imageBuffer)
-      .grayscale()
-      .normalize()
-      .sharpen({ sigma: 1, flat: 1, jagged: 2 })
-      .toBuffer();
-    return processed;
-  } catch (error) {
-    console.error('Errore preprocessamento:', error);
-    return imageBuffer;
-  }
-}
-
 async function extractWarzoneData(imageUrl) {
   try {
     const response = await fetch(imageUrl);
     const imageBuffer = Buffer.from(await response.arrayBuffer());
-    const processedBuffer = await preprocessImage(imageBuffer);
 
+    // OCR diretto senza preprocessamento Sharp
     const result = await Tesseract.recognize(
-      processedBuffer,
+      imageBuffer,
       'eng+ita',
-      { logger: m => console.log(m.status, Math.round(m.progress * 100) + '%') }
+      {
+        logger: m => console.log(m.status, Math.round(m.progress * 100) + '%'),
+        // Usa il worker locale invece di scaricare ogni volta
+        errorHandler: err => console.error('Tesseract error:', err)
+      }
     );
 
     const text = result.data.text.toLowerCase();
@@ -86,6 +75,7 @@ async function extractWarzoneData(imageUrl) {
       /position\s*[:=]?\s*#?(\d+)/i,
       /#(\d+)\s*\/\s*\d+/i,
       /(\d+)\s*of\s*\d+/i,
+      /(\d+)(?:st|nd|rd|th)?\s*place\s*finish/i,
       /finished\s*#?(\d+)/i,
       /placement\s*#?(\d+)/i,
       /#?(\d+)\s*place\s*in\s*squad/i,
@@ -112,11 +102,11 @@ async function extractWarzoneData(imageUrl) {
       }
     }
 
-    // Fallback: cerca numeri isolati vicino a "place" o "posizione"
+    // Fallback
     if (!data.placement) {
       const lines = text.split('\n');
       for (const line of lines) {
-        if (line.includes('place') || line.includes('posizione') || line.includes('posto') || line.includes('classifica')) {
+        if (line.includes('place') || line.includes('posizione') || line.includes('posto')) {
           const numMatch = line.match(/\d{1,3}/);
           if (numMatch) {
             data.placement = parseInt(numMatch[0]);
@@ -137,6 +127,5 @@ async function extractWarzoneData(imageUrl) {
 module.exports = {
   extractWarzoneData,
   calculatePoints,
-  getPlacementMultiplier,
-  preprocessImage
+  getPlacementMultiplier
 };
