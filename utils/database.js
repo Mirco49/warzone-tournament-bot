@@ -1,8 +1,14 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
-// Su Render Free, usa la cartella corrente dell'app
-const dbPath = process.env.DATABASE_PATH || path.join(process.cwd(), 'tournament.db');
+// Crea la cartella se non esiste
+const dbDir = path.join(process.cwd(), 'data');
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
+const dbPath = process.env.DATABASE_PATH || path.join(dbDir, 'tournament.db');
 
 console.log('Database path:', dbPath);
 
