@@ -4,16 +4,11 @@
   "description": "Bot tornei Warzone - OCR screenshot",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "discord.js": "^14.14.1",
     "tesseract.js": "^5.0.4",
-    "sqlite3": "^5.1.6",
-    "sharp": "^0.33.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.2"
+    "sqlite3": "^5.1.6"
   }
 }
