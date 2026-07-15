@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, Events, EmbedBuilder, PermissionsBitField, REST, Routes } = require('discord.js');
-const config = require('./config.json');
+const config = require('./config.js');
 const db = require('./utils/database');
 const { extractWarzoneData, calculatePoints, getPlacementMultiplier } = require('./utils/ocr');
 
